@@ -1,5 +1,5 @@
 from attr import attrs, attrib
-from typing import List, Tuple, Optional
+from typing import Any, List, Tuple, Optional
 
 _MIN_SIZE = 10
 _WAKE_CRC = 0xB5
@@ -16,7 +16,22 @@ def _calc_crc(data: bytes) -> bytes:
     return b''
 
 
+def _check_crc(data: bytes, target: int) -> bool:
+    return True
+
+
 def _get_data(data: bytes, size: int = 1) -> Tuple[bytes, bytes]:
+    first = data[:size]
+    second = data[size:]
+    return first, second
+
+
+def _get_int_data(data: bytes, size: int = 1) -> Tuple[int, bytes]:
+    first, second = _get_data(data, size)
+    return int.from_bytes(first, byteorder='little'), second
+
+
+def _extract_message(data: bytes) -> Any:
     pass
 
 
@@ -24,19 +39,31 @@ def _extract_packet(data: bytes) -> Optional['Packet']:
     if len(data) < _MIN_SIZE:
         return None
 
-    if data[0] != _CE_OPT_MODE:
+    if not _check_crc(data[:-1], data[-1]):
         return None
 
-    direction, data = _get_data(data, 1)
-    sender, data = _get_data(data, 1)
+    opt, data = _get_int_data(data, 1)
 
-    return Packet(direction=direction, sender=sender)
+    if opt != _CE_OPT_MODE:
+        return None
+
+    direction, data = _get_int_data(data, 2)
+    sender, data = _get_int_data(data, 2)
+
+    message, data = _get_data(data, len(data) - 1)
+
+    return Packet(
+        direction=direction,
+        sender=sender,
+        message=_extract_message(message),
+    )
 
 
 @attrs(slots=True, repr=False)
 class Packet:
     direction = attrib(type=int)
     sender = attrib(type=int)
+    message = attrib(type=Any)
 
     _input_buffer: bytes = b''
 
