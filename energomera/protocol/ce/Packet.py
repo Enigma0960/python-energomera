@@ -60,8 +60,3 @@ class Packet:
     error = attrib(type=Optional[ErrorCode], default=None)
     command = attrib(type=Command, default=Command.Ping)
     data = attrib(type=Optional[Any], default=None)
-
-
-if __name__ == '__main__':
-    error = ErrorCode.ParametersError
-    _LOGGER.error(error)
