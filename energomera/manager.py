@@ -13,19 +13,27 @@ class Tree:
         self._tree: TreeType = {}
 
     @staticmethod
-    def _recursive_build(tree: TreeType, left: int, right: List[int], callback: Callable) -> TreeType:
-        # check tail variant
-        if len(right) == 0:
-            if left in tree:
-                if type(tree[left]) is list:
-                    tree[left].append(callback)
+    def _recursive_add(tree: TreeType, left: int, right: List[int], callback: Callable) -> TreeType:
+        if left not in tree:
+            if len(right) == 0:
+                tree[left] = {'call': [callback]}
             else:
-                tree[left] = [callback]
-                return tree
+                tree[left] = Tree._recursive_build({}, right[0], right[1:], callback)
+        else:
+            if len(right) == 0:
+                if 'call' not in tree[left]:
+                    tree[left]['call'] = [callback]
+                else:
+                    tree[left]['call'].append(callback)
+            else:
+                tree[left] = Tree._recursive_build(tree[left], right[0], right[1:], callback)
         return tree
 
-    def add(self, keys: List[int], callback: Callable):
+    def add(self, keys: List[int], callback: Callable) -> None:
         self._tree = self._recursive_build(self._tree, keys[0], keys[1:], callback)
+
+    def call(self, data: List[int]) -> None:
+        pass
 
 
 class Manager:
