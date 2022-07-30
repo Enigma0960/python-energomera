@@ -1,39 +1,39 @@
-from typing import Union, List, Dict, Set, Callable
+from typing import Union, List, Dict, Tuple, Callable
 
 
 class Group:
     pass
 
 
-TreeType = Dict[int, Union[Dict, Callable, List[Callable]]]
+TreeType = Dict[Tuple[int], List[Callable]]
 
 
 class Tree:
     def __init__(self):
         self._tree: TreeType = {}
+        self._deep: int = 0
 
-    @staticmethod
-    def _recursive_add(tree: TreeType, left: int, right: List[int], callback: Callable) -> TreeType:
-        if left not in tree:
-            if len(right) == 0:
-                tree[left] = {'call': [callback]}
-            else:
-                tree[left] = Tree._recursive_build({}, right[0], right[1:], callback)
+    def add(self, cmd: List[int], callback: Callable) -> None:
+        key = tuple(cmd)
+        self._deep = max(self._deep, len(cmd))
+        if key not in self._tree:
+            self._tree[key] = [callback]
         else:
-            if len(right) == 0:
-                if 'call' not in tree[left]:
-                    tree[left]['call'] = [callback]
-                else:
-                    tree[left]['call'].append(callback)
-            else:
-                tree[left] = Tree._recursive_build(tree[left], right[0], right[1:], callback)
-        return tree
+            self._tree[key].append(callback)
 
-    def add(self, keys: List[int], callback: Callable) -> None:
-        self._tree = self._recursive_build(self._tree, keys[0], keys[1:], callback)
+    def remove(self, callback: Callable):
+        for key, value in self._tree.items():
+            if callback in value:
+                self._tree[key].remove(callback)
 
     def call(self, data: List[int]) -> None:
-        pass
+        for index in range(self._deep, 0, -1):
+            key = tuple(data[:index])
+            if key in self._tree:
+                data = data[index:]
+                for call in self._tree[key]:
+                    call(data)
+                return
 
 
 class Manager:
@@ -41,7 +41,7 @@ class Manager:
         self.tree: Tree = Tree()
 
     def _register_handler(self, cmd_list: List[int], callback: Callable) -> None:
-        self.tree.add(keys=cmd_list, callback=callback)
+        self.tree.add(cmd=cmd_list, callback=callback)
 
     def handler(self, cmd: Union[Group, List[int]]):
         def decorator(callback):
