@@ -22,9 +22,12 @@ class Tree:
             self._tree[key].append(callback)
 
     def remove(self, callback: Callable):
-        for key, value in self._tree.items():
+        _temp = self._tree.copy()
+        for key, value in _temp.items():
             if callback in value:
                 self._tree[key].remove(callback)
+                if len(self._tree[key]) == 0:
+                    del self._tree[key]
 
     def call(self, data: List[int]) -> None:
         for index in range(self._deep, 0, -1):

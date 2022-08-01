@@ -53,7 +53,7 @@ if __name__ == '__main__':
     manager.tree.call([10, 11, 13, 14, 15, 21])
     manager.tree.call([10, 42])
 
-    #manager.tree.remove(call_test_5)
+    manager.tree.remove(call_test_5)
 
     manager.tree.call([10, 11, 13, 14, 15])
     pass
