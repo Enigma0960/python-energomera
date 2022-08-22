@@ -2,7 +2,15 @@ from typing import Union, List, Dict, Tuple, Callable
 
 
 class Group:
-    pass
+    def __init__(self, cmd: Union[int, List[int]]):
+        self._cmd = cmd if type(cmd) is List[int] else [cmd]
+
+    @property
+    def cmd(self) -> List[int]:
+        return self._cmd
+
+    def __call__(self, cmd: List[int]):
+        return self._cmd + cmd
 
 
 TreeType = Dict[Tuple[int], List[Callable]]
@@ -40,21 +48,26 @@ class Tree:
 
 
 class Manager:
-    def __init__(self):
-        self.tree: Tree = Tree()
+    def __init__(self, protocol):
+        self._tree: Tree = Tree()
 
     def _register_handler(self, cmd_list: List[int], callback: Callable) -> None:
-        self.tree.add(cmd=cmd_list, callback=callback)
+        self._tree.add(cmd=cmd_list, callback=callback)
 
-    def handler(self, cmd: Union[Group, List[int]]):
+    def handler(self, cmd: Union[int, List[int], Group]):
         def decorator(callback):
-            self._register_handler(cmd_list=cmd, callback=callback)
+            if type(cmd) is list:
+                self._register_handler(cmd_list=cmd, callback=callback)
+            elif type(cmd) is Group:
+                self._register_handler(cmd_list=cmd.cmd, callback=callback)
+            else:
+                self._register_handler(cmd_list=[cmd], callback=callback)
             return callback
 
         return decorator
 
-# def sender(self, cmd_list: Union[Group, List[int]]):
-#     def decorator(callback):
-#         pass
-#
-#     return decorator
+    def sender(self, cmd: Union[int, List[int], Group]):
+        def decorator(callback):
+            pass
+
+        return decorator
